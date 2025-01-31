@@ -8,7 +8,7 @@ public class Plant implements Runnable {
         // Startup the plants
         Plant[] plants = new Plant[NUM_PLANTS];
         for (int i = 0; i < NUM_PLANTS; i++) {
-            plants[i] = new Plant(1);
+            plants[i] = new Plant(i + 1);
             plants[i].startPlant();
         }
 
