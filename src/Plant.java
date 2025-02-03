@@ -53,7 +53,7 @@ public class Plant implements Runnable {
     private final Thread thread;
     private int orangesProvided;
     private int orangesProcessed;
-    private volatile boolean timeToWork;
+    private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
 
     Plant(int threadNum) {
         orangesProvided = 0;
