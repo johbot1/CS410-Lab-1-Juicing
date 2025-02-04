@@ -1,6 +1,7 @@
 public class MutexTestSpinLoop implements Runnable {
     private static final int NUM_THREADS = 5;
-
+    //USE synchronize, monitor
+    //Make sure acquire comes before release
     public static void main(String[] args) {
         Mutex m = new Mutex();
 
