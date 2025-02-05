@@ -53,3 +53,18 @@ public class Mutex {
         }
     }
 }
+//Spinlock Mutex
+//    private boolean locked;
+//
+//    public synchronized boolean acquire() {
+//        if (locked) {
+//            return false;
+//        }
+//        locked = true;
+//        return true;
+//    }
+//
+//    public synchronized void release() {
+//        locked = false;
+//    }
+//}
