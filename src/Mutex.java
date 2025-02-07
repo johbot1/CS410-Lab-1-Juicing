@@ -7,37 +7,32 @@ public class Mutex {
     //Keeps track of state of locked (true) or unlocked (false)
     private boolean isLocked = false;
 
-    //First in First Out Waiting Line
-    private final Queue<Thread> waitingThreads = new LinkedList<>();
 
     //Synchronized ensures only one thread can modify waitingQueue or isLocked
     //This function will block a thread until it's allowed the Mutex
-    public synchronized boolean acquire() {
+    public synchronized void acquire() {
         //Gets the current thread, then adds it to the queue
         //to know who is waiting. This ensures first come,
         //first served fairness.
         Thread currentThread = Thread.currentThread();
-        waitingThreads.add(currentThread);
 
         //Wait if currently locked, meaning another thread has the mutex
         //or if the current thread is not first in line
-        while(isLocked || waitingThreads.peek() != currentThread){
+        while(isLocked){
             //The thread pauses execution and then releases the lock.
             //If it's interrupted, the thread restores it's interrupted
             //state, ensuring consistency/context preservation
             try{
                 wait();
             } catch(InterruptedException e){
-                Thread.currentThread().interrupt(); //Preserve interrupt status
+
             }
         }
         //On exit, the mutex is now free, and the current thread
         //is the first in line in the queue.
         //Remove the current thread from the queue since it don't need
         //to wait anymore, then lock the mutex back up.
-        waitingThreads.poll();
         isLocked= true;
-        return true;
     }
 
     //Unlocks the Mutex, synchronized ensures only one Thread
@@ -48,9 +43,7 @@ public class Mutex {
         //If there are any threads in the waiting queue,
         //wake them up. I use notifyAll because I don't know
         //which thread specifically will be the next to run
-        if (!waitingThreads.isEmpty()) {
-            notifyAll();
-        }
+        notifyAll();
     }
 }
 //Spinlock Mutex

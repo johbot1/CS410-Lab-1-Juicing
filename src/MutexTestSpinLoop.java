@@ -38,8 +38,6 @@ public class MutexTestSpinLoop implements Runnable {
         //Then, lets the user know it's acquired.
         //Thread will delay or hold onto the mutex for 1 second before release.
         try {
-            while (!m.acquire())
-                continue;
             System.out.println(Thread.currentThread().getName() + " Acquired");
             delay(1000);
         }//Ensures teh mutex is always released, regardless of exception

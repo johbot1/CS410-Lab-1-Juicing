@@ -1,6 +1,11 @@
 public class MutexTest implements Runnable {
     private static final int NUM_THREADS = 5;
 
+    //TL;DR: The main thread starts 5 new threads (T[0],T[1],...T[4]
+    //Each thread prints running, but doesn't necessarily execute in order
+    //Only one thread can enter the 'acquire' section at a time
+    //Thread prints "Acquired", waits 1 second, then releases the mutex, printing "Done"
+    //The next thread in the queue wakes up and repeats the process.
     public static void main(String[] args) {
         Mutex m = new Mutex();
 
