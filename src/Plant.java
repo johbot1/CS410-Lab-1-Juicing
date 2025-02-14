@@ -1,3 +1,9 @@
+/**
+ * @Author Nate Williams
+ * @Author John Botonakis
+ *
+ * Most of this code remains unmodified from the original download, however, anything added will be labeled as NEW
+ */
 public class Plant implements Runnable {
     // How long do we want to run the juice processing
     public static final long PROCESSING_TIME = 5 * 1000;
@@ -7,6 +13,16 @@ public class Plant implements Runnable {
     private int orangesProvided;
     private int orangesProcessed;
     private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
+
+    // NEW: Shared queue for oranges produced by this plant
+    private final OrangeQueue orangeQueue = new OrangeQueue();
+
+    //NEW: Used this to print out clearer names as opposed to code gibberish
+    @Override
+    public String toString() {
+        return "Plant " + thread.getName().replaceAll("[^0-9]", "");
+    }
+
 
     public static void main(String[] args) {
         // Startup the plants
@@ -77,14 +93,22 @@ public class Plant implements Runnable {
     }
 
     public void run() {
-        System.out.print(Thread.currentThread().getName() + " Processing oranges");
+        System.out.println(Thread.currentThread().getName() + " Processing oranges");
         while (timeToWork) {
-//            Workers will go here probably?
-            processEntireOrange(new Orange());
+            // NEW: Instead of processing the orange completely,
+            // create a new Orange and enqueue it for the workers.
+            Orange orange = new Orange();
+            orangeQueue.enqueue(orange);
             orangesProvided++;
-            System.out.print(".");
+//            System.out.println(Thread.currentThread().getName() + " processed an orange. Total processed: " + orangesProcessed);
+
+
+//            Just in case I cannot actually modify Plant code
+//            processEntireOrange(new Orange());
+//            orangesProvided++;
+//            System.out.print(".");
         }
-        System.out.println("");
+        System.out.println(Thread.currentThread().getName() + " has stopped processing.");
         System.out.println(Thread.currentThread().getName() + " Done");
     }
 
@@ -92,6 +116,11 @@ public class Plant implements Runnable {
         while (o.getState() != Orange.State.Bottled) {
             o.runProcess();
         }
+        orangesProcessed++;
+    }
+
+    // NEW: Called by worker threads when they finish processing an orange.
+    public synchronized void incrementProcessedOranges() {
         orangesProcessed++;
     }
 
@@ -109,5 +138,10 @@ public class Plant implements Runnable {
 
     public int getWaste() {
         return orangesProcessed % ORANGES_PER_BOTTLE;
+    }
+
+    // NEW: Getter to expose the orange queue for worker threads.
+    public OrangeQueue getOrangeQueue() {
+        return orangeQueue;
     }
 }
