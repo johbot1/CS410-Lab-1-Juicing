@@ -7,3 +7,8 @@
 /dataSources/
 /dataSources.local.xml
 /.idea/
+
+Mutex.java
+MutexSpin.java
+MutexTest.java
+MutexTestSpinLoop.java
