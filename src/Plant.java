@@ -1,8 +1,12 @@
 public class Plant implements Runnable {
     // How long do we want to run the juice processing
     public static final long PROCESSING_TIME = 5 * 1000;
-
+    public static final int ORANGES_PER_BOTTLE = 4;
     private static final int NUM_PLANTS = 2;
+    private final Thread thread;
+    private int orangesProvided;
+    private int orangesProcessed;
+    private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
 
     public static void main(String[] args) {
         // Startup the plants
@@ -35,8 +39,8 @@ public class Plant implements Runnable {
             totalWasted += p.getWaste();
         }
         System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
-        System.out.println("Created " + totalBottles +
-                ", wasted " + totalWasted + " oranges");
+        System.out.println("Created " + totalBottles + ", wasted " + totalWasted + " oranges");
+        System.out.println("Oranges per bottle: " + ORANGES_PER_BOTTLE);
     }
 
     private static void delay(long time, String errMsg) {
@@ -48,12 +52,6 @@ public class Plant implements Runnable {
         }
     }
 
-    public final int ORANGES_PER_BOTTLE = 3;
-
-    private final Thread thread;
-    private int orangesProvided;
-    private int orangesProcessed;
-    private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
 
     Plant(int threadNum) {
         orangesProvided = 0;
@@ -81,6 +79,7 @@ public class Plant implements Runnable {
     public void run() {
         System.out.print(Thread.currentThread().getName() + " Processing oranges");
         while (timeToWork) {
+//            Workers will go here probably?
             processEntireOrange(new Orange());
             orangesProvided++;
             System.out.print(".");
