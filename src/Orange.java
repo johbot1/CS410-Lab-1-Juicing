@@ -1,28 +1,4 @@
 public class Orange {
-    public enum State {
-        Fetched(15),
-        Peeled(38),
-        Squeezed(29),
-        Bottled(17),
-        Processed(1);
-
-        private static final int finalIndex = State.values().length - 1;
-
-        final int timeToComplete;
-
-        State(int timeToComplete) {
-            this.timeToComplete = timeToComplete;
-        }
-
-        State getNext() {
-            int currIndex = this.ordinal();
-            if (currIndex >= finalIndex) {
-                throw new IllegalStateException("Already at final state");
-            }
-            return State.values()[currIndex + 1];
-        }
-    }
-
     private State state;
 
     public Orange() {
@@ -49,6 +25,30 @@ public class Orange {
             Thread.sleep(state.timeToComplete);
         } catch (InterruptedException e) {
             System.err.println("Incomplete orange processing, juice may be bad");
+        }
+    }
+
+    public enum State {
+        Fetched(15),
+        Peeled(38),
+        Squeezed(29),
+        Bottled(17),
+        Processed(1);
+
+        private static final int finalIndex = State.values().length - 1;
+
+        final int timeToComplete;
+
+        State(int timeToComplete) {
+            this.timeToComplete = timeToComplete;
+        }
+
+        State getNext() {
+            int currIndex = this.ordinal();
+            if (currIndex >= finalIndex) {
+                throw new IllegalStateException("Already at final state");
+            }
+            return State.values()[currIndex + 1];
         }
     }
 }

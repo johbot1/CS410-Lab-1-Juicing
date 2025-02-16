@@ -1,7 +1,7 @@
 /**
  * @Author Nate Williams
  * @Author John Botonakis
- *
+ * <p>
  * Most of this code remains unmodified from the original download, however, anything added will be labeled as NEW
  */
 public class Plant implements Runnable {
@@ -10,19 +10,17 @@ public class Plant implements Runnable {
     public static final int ORANGES_PER_BOTTLE = 4;
     private static final int NUM_PLANTS = 2;
     private final Thread thread;
+    // NEW: Shared queue for oranges produced by this plant
+    private final OrangeQueue orangeQueue = new OrangeQueue();
     private int orangesProvided;
     private int orangesProcessed;
     private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
 
-    // NEW: Shared queue for oranges produced by this plant
-    private final OrangeQueue orangeQueue = new OrangeQueue();
-
-    //NEW: Used this to print out clearer names as opposed to code gibberish
-    @Override
-    public String toString() {
-        return "Plant " + thread.getName().replaceAll("[^0-9]", "");
+    Plant(int threadNum) {
+        orangesProvided = 0;
+        orangesProcessed = 0;
+        thread = new Thread(this, "Plant[" + threadNum + "]");
     }
-
 
     public static void main(String[] args) {
         // Startup the plants
@@ -68,11 +66,10 @@ public class Plant implements Runnable {
         }
     }
 
-
-    Plant(int threadNum) {
-        orangesProvided = 0;
-        orangesProcessed = 0;
-        thread = new Thread(this, "Plant[" + threadNum + "]");
+    //NEW: Used this to print out clearer names as opposed to code gibberish
+    @Override
+    public String toString() {
+        return "Plant " + thread.getName().replaceAll("[^0-9]", "");
     }
 
     public void startPlant() {
