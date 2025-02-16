@@ -1,32 +1,42 @@
 /**
  * @Author Nate Williams
  * @Author John Botonakis
- * <p>
- * Most of this code remains unmodified from the original download, however, anything added will be labeled as NEW
+ *
+ * This Plant class represents a factory-esque operation where each instance simulates a plant
+ * that processes oranges into bottled juice. The class uses "Runnable" which means that this can
+ * be executed on its own thread.
+ *
+ * Most code here is unchanged, with any comments done by me being stated
  */
 public class Plant implements Runnable {
     // How long do we want to run the juice processing
     public static final long PROCESSING_TIME = 5 * 1000;
-    public static final int ORANGES_PER_BOTTLE = 4;
+    //[JB] The amount of oranges required to produce one bottle
+    private final static int ORANGES_PER_BOTTLE = 4;
+    //[JB] The number of plants to be created
     private static final int NUM_PLANTS = 2;
     private final Thread thread;
-    // NEW: Shared queue for oranges produced by this plant
-    private final OrangeQueue orangeQueue = new OrangeQueue();
+    //[JB] Tracks the amount of oranges provided/processed by the plant
     private int orangesProvided;
     private int orangesProcessed;
-    private volatile boolean timeToWork; //Volatile - Do NOT cache the data inside the thread
+    //[JB] Volatile boolean indicating if the plant is working/running
+    //Volatile ensures that it is updated and seen across all threads
+    private volatile boolean timeToWork;
 
-    Plant(int threadNum) {
-        orangesProvided = 0;
-        orangesProcessed = 0;
-        thread = new Thread(this, "Plant[" + threadNum + "]");
-    }
 
+    /**
+     * [JB]
+     * Creates an array of plants of "NUM_PLANTS" size, and initalizes them
+     * After, it waits for the plants to finish processing, then, it stops each
+     * one and sets the timeToWork flag to false. waitToStop is called after for each
+     * plant's thread to finish by calling join()
+     * @param args
+     */
     public static void main(String[] args) {
         // Startup the plants
         Plant[] plants = new Plant[NUM_PLANTS];
         for (int i = 0; i < NUM_PLANTS; i++) {
-            plants[i] = new Plant(i + 1);
+            plants[i] = new Plant(1);
             plants[i].startPlant();
         }
 
@@ -53,10 +63,16 @@ public class Plant implements Runnable {
             totalWasted += p.getWaste();
         }
         System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
-        System.out.println("Created " + totalBottles + ", wasted " + totalWasted + " oranges");
-        System.out.println("Oranges per bottle: " + ORANGES_PER_BOTTLE);
+        System.out.println("Created " + totalBottles +
+                ", wasted " + totalWasted + " oranges");
     }
 
+    /**
+     * [JB]
+     * Utility to pause the program giving some tiny degree of randomness
+     * @param time
+     * @param errMsg
+     */
     private static void delay(long time, String errMsg) {
         long sleepTime = Math.max(1, time);
         try {
@@ -66,21 +82,32 @@ public class Plant implements Runnable {
         }
     }
 
-    //NEW: Used this to print out clearer names as opposed to code gibberish
-    @Override
-    public String toString() {
-        return "Plant " + thread.getName().replaceAll("[^0-9]", "");
+
+    /**
+     * [JB]
+     * Constructor initilaizes the oranges provided/processed to 0
+     * It also creates a new thread, giving it the run method, and a unique name
+     *
+     * @param threadNum a uniquely named new thread object
+     */
+    Plant(int threadNum) {
+        orangesProvided = 0;
+        orangesProcessed = 0;
+        thread = new Thread(this, "Plant[" + threadNum + "]");
     }
 
+
+    //[JB] Sets timeToWork to true, and starts the thread
     public void startPlant() {
         timeToWork = true;
         thread.start();
     }
-
+    //[JB] Sets timeToWork to false, signalling it should stop processing
     public void stopPlant() {
         timeToWork = false;
     }
 
+    //[JB] Waits for plant thread to complete by calling join on any other threads
     public void waitToStop() {
         try {
             thread.join();
@@ -89,35 +116,33 @@ public class Plant implements Runnable {
         }
     }
 
+    /**
+     * [JB]
+     * Processes oranges while timeToWork is true.
+     * Prints out info about which plant is processing oranges; For each
+     * orange, the entire process is called and orangesProvided incremented.
+     */
     public void run() {
-        System.out.println(Thread.currentThread().getName() + " Processing oranges");
+        System.out.print(Thread.currentThread().getName() + " Processing oranges");
         while (timeToWork) {
-            // NEW: Instead of processing the orange completely,
-            // create a new Orange and enqueue it for the workers.
-            Orange orange = new Orange();
-            orangeQueue.enqueue(orange);
+            processEntireOrange(new Orange());
             orangesProvided++;
-//            System.out.println(Thread.currentThread().getName() + " processed an orange. Total processed: " + orangesProcessed);
-
-
-//            Just in case I cannot actually modify Plant code
-//            processEntireOrange(new Orange());
-//            orangesProvided++;
-//            System.out.print(".");
+            System.out.print(".");
         }
-        System.out.println(Thread.currentThread().getName() + " has stopped processing.");
+        System.out.println("");
         System.out.println(Thread.currentThread().getName() + " Done");
     }
 
+    /**
+     * [JB]
+     * Calls runProcess until the orange is bottled
+     * After, orangesProcessed is incremented
+     * @param o
+     */
     public void processEntireOrange(Orange o) {
         while (o.getState() != Orange.State.Bottled) {
             o.runProcess();
         }
-        orangesProcessed++;
-    }
-
-    // NEW: Called by worker threads when they finish processing an orange.
-    public synchronized void incrementProcessedOranges() {
         orangesProcessed++;
     }
 
@@ -135,10 +160,5 @@ public class Plant implements Runnable {
 
     public int getWaste() {
         return orangesProcessed % ORANGES_PER_BOTTLE;
-    }
-
-    // NEW: Getter to expose the orange queue for worker threads.
-    public OrangeQueue getOrangeQueue() {
-        return orangeQueue;
     }
 }

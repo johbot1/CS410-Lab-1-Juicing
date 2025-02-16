@@ -1,7 +1,18 @@
 # Juice Bottler Lab
 
 ## What is this?
-[EXPLAIN]
+With this first lab in our OS course, we are tasked with designing a Juice Bottling Plant to help us better understand
+multithreading. In this plant, there are workers who can be assigned one of five jobs:
+- Fetcher
+- Peeler
+- Squeezer
+- Bottler
+- Processor  
+
+Once the program is ran, and the Juice Bottling Plant begins, the workers are given a title based on their job, and
+an orange is spawned in, beginning the juicing process.
+
+
 
 ## Requirements:
 ### Apache Ant:
