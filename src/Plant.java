@@ -17,7 +17,7 @@ public class Plant implements Runnable {
     //[JB] The amount of oranges required to produce one bottle
     private final static int ORANGES_PER_BOTTLE = 4;
     //[JB] The number of plants to be created
-    private static final int NUM_PLANTS = 2;
+    private static final int NUM_PLANTS =  2;
     private final Thread thread;
     BlockingQueue<Orange> orangeQueue = new LinkedBlockingQueue<>();
     //[JB] Tracks the amount of oranges provided/processed by the plant
@@ -108,6 +108,8 @@ public class Plant implements Runnable {
     public void startPlant() {
         timeToWork = true;
         thread.start();
+        worker1 = new Worker(this, 1);
+        worker2 = new Worker(this, 1);
     }
 
     //[JB] Sets timeToWork to false, signalling it should stop processing
@@ -131,8 +133,6 @@ public class Plant implements Runnable {
      * orange, the entire process is called and orangesProvided incremented.
      */
     public void run() {
-        worker1 = new Worker(this, 1, null);
-        worker2 = new Worker(this, 1, null);
         System.out.print(Thread.currentThread().getName() + " Processing oranges");
         while (timeToWork) {
             //NEW:

@@ -26,4 +26,4 @@ to check your installation version: `ant -v` or `ant --version`
 - Download the files
 - Navigate to the directory you have the files, and run
 the following Ant build command `ant build`
-- After it has built, run the following to begin the program `ant run`
+- After it has built, run the following to begin the program `ant`
