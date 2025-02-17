@@ -1,11 +1,14 @@
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 /**
  * @Author Nate Williams
  * @Author John Botonakis
- *
+ * <p>
  * This Plant class represents a factory-esque operation where each instance simulates a plant
  * that processes oranges into bottled juice. The class uses "Runnable" which means that this can
  * be executed on its own thread.
- *
+ * <p>
  * Most code here is unchanged, with any comments done by me being stated
  */
 public class Plant implements Runnable {
@@ -16,13 +19,30 @@ public class Plant implements Runnable {
     //[JB] The number of plants to be created
     private static final int NUM_PLANTS = 2;
     private final Thread thread;
+    BlockingQueue<Orange> orangeQueue = new LinkedBlockingQueue<>();
     //[JB] Tracks the amount of oranges provided/processed by the plant
     private int orangesProvided;
     private int orangesProcessed;
     //[JB] Volatile boolean indicating if the plant is working/running
     //Volatile ensures that it is updated and seen across all threads
     private volatile boolean timeToWork;
+    //[JB] Creates two workers per plant
+    private Worker worker1;
+    private Worker worker2;
 
+
+    /**
+     * [JB]
+     * Constructor initilaizes the oranges provided/processed to 0
+     * It also creates a new thread, giving it the run method, and a unique name
+     *
+     * @param threadNum a uniquely named new thread object
+     */
+    Plant(int threadNum) {
+        orangesProvided = 0;
+        orangesProcessed = 0;
+        thread = new Thread(this, "Plant [" + threadNum + "]");
+    }
 
     /**
      * [JB]
@@ -30,6 +50,7 @@ public class Plant implements Runnable {
      * After, it waits for the plants to finish processing, then, it stops each
      * one and sets the timeToWork flag to false. waitToStop is called after for each
      * plant's thread to finish by calling join()
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -70,6 +91,7 @@ public class Plant implements Runnable {
     /**
      * [JB]
      * Utility to pause the program giving some tiny degree of randomness
+     *
      * @param time
      * @param errMsg
      */
@@ -82,26 +104,12 @@ public class Plant implements Runnable {
         }
     }
 
-
-    /**
-     * [JB]
-     * Constructor initilaizes the oranges provided/processed to 0
-     * It also creates a new thread, giving it the run method, and a unique name
-     *
-     * @param threadNum a uniquely named new thread object
-     */
-    Plant(int threadNum) {
-        orangesProvided = 0;
-        orangesProcessed = 0;
-        thread = new Thread(this, "Plant[" + threadNum + "]");
-    }
-
-
     //[JB] Sets timeToWork to true, and starts the thread
     public void startPlant() {
         timeToWork = true;
         thread.start();
     }
+
     //[JB] Sets timeToWork to false, signalling it should stop processing
     public void stopPlant() {
         timeToWork = false;
@@ -123,13 +131,18 @@ public class Plant implements Runnable {
      * orange, the entire process is called and orangesProvided incremented.
      */
     public void run() {
+        worker1 = new Worker(this, 1, null);
+        worker2 = new Worker(this, 1, null);
         System.out.print(Thread.currentThread().getName() + " Processing oranges");
         while (timeToWork) {
-            processEntireOrange(new Orange());
+            //NEW:
+            Orange o = new Orange();
+            orangeQueue.add(o);
+            processEntireOrange(o);
             orangesProvided++;
             System.out.print(".");
         }
-        System.out.println("");
+        System.out.println();
         System.out.println(Thread.currentThread().getName() + " Done");
     }
 
@@ -137,11 +150,13 @@ public class Plant implements Runnable {
      * [JB]
      * Calls runProcess until the orange is bottled
      * After, orangesProcessed is incremented
+     *
      * @param o
      */
     public void processEntireOrange(Orange o) {
         while (o.getState() != Orange.State.Bottled) {
-            o.runProcess();
+//            System.out.println("[INFO] In Processing...");
+            worker1.beginWork(o);
         }
         orangesProcessed++;
     }
