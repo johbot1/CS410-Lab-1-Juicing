@@ -42,6 +42,9 @@ public class Plant implements Runnable {
     private Worker peeler;
     private Worker squeezer;
     private Worker bottler;
+    //[JB] Boolean to ensure that the printout is working only once
+    private static boolean shutdownPrinted = false;
+
 
     /**
      * Constructor initializes the oranges provided/processed to 0
@@ -93,9 +96,17 @@ public class Plant implements Runnable {
             totalBottles += p.getBottles();
             totalWasted += p.getWaste();
         }
-        System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
-        System.out.println("Created " + totalBottles +
-                ", wasted " + totalWasted + " oranges");
+        int actualProvided = totalProvided - totalWasted;  // Adjust for waste
+        System.out.println("My Way");
+        System.out.println("Total provided/processed = " + actualProvided + "/" + totalProcessed);
+        System.out.println("Created " + totalBottles + ", wasted " + totalWasted + " oranges");
+
+        //[JB] I'm not sure how, but there is an issue in how the original summary is printed
+        //For some reason, the totalProvided doesn't have the amount subtracted properly
+//        System.out.println("Nate's Way");
+//        System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
+//        System.out.println("Created " + totalBottles +
+//                ", wasted " + totalWasted + " oranges");
     }
 
     /**
@@ -235,22 +246,33 @@ public class Plant implements Runnable {
             System.err.println("Error while pausing for workers to finish.");
         }
 
-        // Step 3: Final queue cleanup
-        System.out.println("Final queue sizes before shutdown:");
-        System.out.println("Peeling queue: " + peelingQueue.size());
-        System.out.println("Squeezing queue: " + squeezingQueue.size());
-        System.out.println("Bottling queue: " + bottlingQueue.size());
+        // Step 3: Final queue cleanup ensuring it's only printed once
+        // Only print queue sizes if it hasn’t been printed before
+        synchronized (Plant.class) {
+            if (!shutdownPrinted) {
+                shutdownPrinted = true;
+                System.out.println("Final queue sizes before shutdown:");
+                System.out.println("Peeling queue: " + peelingQueue.size());
+                System.out.println("Squeezing queue: " + squeezingQueue.size());
+                System.out.println("Bottling queue: " + bottlingQueue.size());
 
-        // Step 4: Log any remaining oranges
-        if (!peelingQueue.isEmpty()) {
-            System.err.println("WARNING: Some oranges were left not peeled.");
+                // Log remaining peeled oranges
+                if (!peelingQueue.isEmpty()) {
+                    System.err.println("WARNING: Some oranges were left not peeled.");
+                }
+                //Log remaining squeezed oranges
+                if (!squeezingQueue.isEmpty()) {
+                    System.err.println("WARNING: Some oranges were left not squoze.");
+                }
+
+                // Log if remaining oranges to be bottled
+                if (!bottlingQueue.isEmpty()) {
+                    System.err.println("WARNING: Some oranges were left not bottled.");
+                }
+
+                System.out.println("All workers have been stopped.");
+            }
         }
-
-        if (!squeezingQueue.isEmpty()) {
-            System.err.println("WARNING: Some oranges were left not squoze.");
-        }
-
-        System.out.println("All workers have been stopped.");
     }
 
     /**
@@ -273,7 +295,7 @@ public class Plant implements Runnable {
 
     /**
      * sendOranges
-     * This function will simply add an orange to the export list.
+     * This function will simply add an orange to the sendOranges list.
      *
      * @param orange     Orange object to be added
      * @param exportList
