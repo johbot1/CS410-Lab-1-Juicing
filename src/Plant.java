@@ -22,26 +22,27 @@ public class Plant implements Runnable {
     private static final int NUM_PLANTS = 2;
     //[JB] Magic number for number of workers, one for each job
     private final static int NUM_WORKERS = 5;
+    //[JB] Creates a Thread to be used later
+    private final Thread thread;
+    //[JB] Creates a storage area for workers
+    private final Worker[] workers = new Worker[NUM_WORKERS];
+    //[JB] Creates a storage area for queues
+    private final List<Orange> queues = new ArrayList<Orange>(NUM_WORKERS);
     //[JB] Tracks the amount of oranges provided/processed by the plant
     public int orangesProvided;
     public ConcurrentLinkedQueue<Orange> peelingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> squeezingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> bottlingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> processorQueue = new ConcurrentLinkedQueue<Orange>();
-    //[JB] Creates a Thread to be used later
-    private final Thread thread;
     private int orangesProcessed;
     //[JB] Volatile boolean indicating if the plant is working/running
     //Volatile ensures that it is updated and seen across all threads
     private volatile boolean timeToWork;
-    //[JB] Creates a storage area for workers
-    private final Worker[] workers = new Worker[NUM_WORKERS];
-    //[JB] Creates a storage area for queues
-    private final List<Orange> queues = new ArrayList<Orange>(NUM_WORKERS);
     private Worker fetcher;
     private Worker peeler;
     private Worker squeezer;
     private Worker bottler;
+
     /**
      * //[JB]
      * Constructor initializes the oranges provided/processed to 0
@@ -180,7 +181,7 @@ public class Plant implements Runnable {
      * //[JB]
      * getProvidedOranges
      *
-     * @return
+     * @return The current amount of fetched oranges
      */
     public int getProvidedOranges() {
         orangesProvided = fetcher.getOrangeCounter();
@@ -191,7 +192,7 @@ public class Plant implements Runnable {
      * //[JB]
      * getProcessedOranges
      *
-     * @return
+     * @return The current amount of processed oranges
      */
     public int getProcessedOranges() {
         orangesProcessed = processorQueue.size();
@@ -202,7 +203,7 @@ public class Plant implements Runnable {
      * //[JB]
      * getBottles
      *
-     * @return
+     * @return The amount of bottles created by dividing processed oranges by amt of oranges per bottle
      */
     public int getBottles() {
         return orangesProcessed / ORANGES_PER_BOTTLE;
@@ -212,7 +213,7 @@ public class Plant implements Runnable {
      * //[JB]
      * getWaste
      *
-     * @return
+     * @return The amount of waste created
      */
     public int getWaste() {
         return orangesProcessed % ORANGES_PER_BOTTLE + (orangesProvided - orangesProcessed);
@@ -251,29 +252,16 @@ public class Plant implements Runnable {
         if (!processorQueue.isEmpty()) {
             System.err.println("WARNING: Some oranges were left unprocessed.");
         }
-        if (!peelingQueue.isEmpty()){
+        if (!peelingQueue.isEmpty()) {
             System.err.println("WARNING: Some oranges were left not peeled.");
         }
 
         if (!squeezingQueue.isEmpty() ||
-                !bottlingQueue.isEmpty() ){
+                !bottlingQueue.isEmpty()) {
             System.err.println("WARNING: Some oranges were left not squoze or bottled.");
         }
 
         System.out.println("All workers have been stopped.");
-    }
-
-
-    /**
-     * //[JB]
-     * createQueues
-     * Creates 5 Distinct queues
-     */
-    private void createQueues() {
-        String[] listNames = {"peelingQueue", "squeezingQueue", "bottlingQueue", "processorQueue"};
-        for (int i = 0; i < NUM_WORKERS; i++) {
-//            List<Orange>
-        }
     }
 }
 

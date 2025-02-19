@@ -1,35 +1,39 @@
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Worker implements Runnable {
+    private final ConcurrentLinkedQueue<Orange> readyForWork;
+    private final ConcurrentLinkedQueue<Orange> processedOranges;
     private boolean isWorking;
-    private String workerName;
-
-    private Thread workerThread;
+    private final Thread workerThread;
     private volatile int orangeCounter;
 
 
-    private ConcurrentLinkedQueue<Orange> fromList;
-    private ConcurrentLinkedQueue<Orange> toList;
-
-
+    /**
+     * @param name Name of the Worker (i.e his assignment)
+     * @param to   Oranges ready to be processed
+     * @param from Oranges that have been processed, ready to go out
+     */
     Worker(String name, ConcurrentLinkedQueue<Orange> to, ConcurrentLinkedQueue<Orange> from) {
-        this.fromList = from;
-        this.toList = to;
-        this.workerName = name;
+        this.readyForWork = from;
+        this.processedOranges = to;
         this.workerThread = new Thread(this, "Worker Name: " + name);
         System.out.println("Worker: " + name + " created.");
         startWorking();
     }
 
-
+    /**
+     *
+     */
     public void startWorking() {
         isWorking = true;
-//        System.out.println("Worker: " + this.workerName + " is now working!");
         orangeCounter = 0;
         workerThread.start();
 
     }
 
+    /**
+     *
+     */
     public void stopWorking() {
         isWorking = false;
         clockOut();
@@ -43,36 +47,31 @@ public class Worker implements Runnable {
         }
     }
 
-    public String getWorkerName() {
-        return workerName;
-    }
 
-    public ConcurrentLinkedQueue<Orange> getToList() {
-        return toList;
-    }
-
-    public ConcurrentLinkedQueue<Orange> getFromList() {
-        return fromList;
-    }
-
+    /**
+     * @return The Worker's Orange counter
+     */
     public int getOrangeCounter() {
         return orangeCounter;
     }
 
+    /**
+     *
+     */
     @Override
     public void run() {
         while (isWorking) {
-            if (fromList != null && !fromList.isEmpty()) {
-                Orange o = JuiceBottler.getWork(fromList);
+            if (readyForWork != null && !readyForWork.isEmpty()) {
+                Orange o = JuiceBottler.getWork(readyForWork);
                 if (o != null) {
                     o.runProcess();
-                    JuiceBottler.sendWork(o, toList);
+                    JuiceBottler.sendWork(o, processedOranges);
                 }
-            } else if (fromList == null) { // If fetcher
+            } else if (readyForWork == null) { // If fetcher
                 Orange o = new Orange();
                 orangeCounter++;
                 o.runProcess();
-                JuiceBottler.sendWork(o, toList);
+                JuiceBottler.sendWork(o, processedOranges);
             }
 
             try {
