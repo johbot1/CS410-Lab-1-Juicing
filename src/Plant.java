@@ -44,10 +44,9 @@ public class Plant implements Runnable {
     private Worker bottler;
 
     /**
-     * //[JB]
      * Constructor initializes the oranges provided/processed to 0
      * It also creates a new thread, giving it the run method, and a unique name
-     *
+     * //[JB]
      * @param threadNum a thread number to identify and separate plant objects
      */
     Plant(int threadNum) {
@@ -57,12 +56,12 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * Creates an array of plants of "NUM_PLANTS" (2) size and initializes them
      * After creation, each of the plants starts it's work.
      * The delay call gives the plants time to work.
      * Once the work day is done, the plants stop, then join the workers together,
      * summarizing the day's production.
+     * //[JB]
      */
     public static void main(String[] args) {
         // Startup the plants
@@ -100,9 +99,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * Delays the plant thread, allowing the workers to work
-     *
+     * //[JB]
      * @param time
      * @param errMsg
      */
@@ -116,8 +114,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * Sets timeToWork to true, and starts the thread
+     * //[JB]
      */
     public void startPlant() {
         timeToWork = true;
@@ -125,16 +123,16 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * Sets timeToWork to false, signalling it should stop processing
+     * //[JB]
      */
     public void stopPlant() {
         timeToWork = false;
     }
 
     /**
-     * //[JB]
      * Waits for plant thread to complete by calling join on any other threads
+     * //[JB]
      */
     public void waitToStop() {
         try {
@@ -145,10 +143,10 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * While it is time to work, do nothing as it's a plant and doesn't need to work.
      * After it's done, begin to slow down production to a halt, eventually stopping altogether.
      * Finally, print a blank line for better spacing of the production summary
+     * //[JB]
      */
     public void run() {
         System.out.println(Thread.currentThread().getName() + " Processing oranges");
@@ -162,9 +160,9 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * createWorkers
      * Creates each of the workers that will be working in the Factory
+     * //[JB]
      */
     private void createWorkers() {
         String[] workerNames = {"fetcher", "peeler", "squeezer", "bottler"};
@@ -178,9 +176,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * getProvidedOranges
-     *
+     * //[JB]
      * @return The current amount of fetched oranges
      */
     public int getProvidedOranges() {
@@ -189,9 +186,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * getProcessedOranges
-     *
+     * //[JB]
      * @return The current amount of processed oranges
      */
     public int getProcessedOranges() {
@@ -200,9 +196,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * getBottles
-     *
+     * //[JB]
      * @return The amount of bottles created by dividing processed oranges by amt of oranges per bottle
      */
     public int getBottles() {
@@ -210,9 +205,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * getWaste
-     *
+     * //[JB]
      * @return The amount of waste created
      */
     public int getWaste() {
@@ -220,10 +214,10 @@ public class Plant implements Runnable {
     }
 
     /**
-     * //[JB]
      * quittinTime
      * This calls the ".join" method on each of the workers,
      * So long as they are not actively busy, shutting them down.
+     * //[JB]
      */
     private void quittinTime() {
         System.out.println("Signaling workers to stop...");
@@ -236,7 +230,7 @@ public class Plant implements Runnable {
 
         // Step 2: Give workers some time to finish up remaining work
         try {
-            Thread.sleep(500); // Give workers half a second to wrap up
+            Thread.sleep(500); // Give workers half a second to wrap up their queues
         } catch (InterruptedException e) {
             System.err.println("Error while pausing for workers to finish.");
         }
@@ -262,6 +256,35 @@ public class Plant implements Runnable {
         }
 
         System.out.println("All workers have been stopped.");
+    }
+
+    /**
+     * getWork
+     * This function will check the input list first to assess if it's empty or not.
+     * If it is not empty, grab an orange, and remove it from the list.
+     * If it IS empty, return null.
+     *
+     * @param inputList The list of incoming Orange objects
+     * @return
+     */
+    public synchronized static Orange getWork(ConcurrentLinkedQueue<Orange> inputList) {
+        if (!inputList.isEmpty()) {
+            Orange o = inputList.poll();
+            return o;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * sendWork
+     * This function will simply add an orange to the export list.
+     *
+     * @param orange     Orange object to be added
+     * @param exportList
+     */
+    public synchronized static void sendWork(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
+        exportList.add(orange);
     }
 }
 

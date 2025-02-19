@@ -1,21 +1,33 @@
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Worker Class
+ *
+ * //[JB]
+ */
 public class Worker implements Runnable {
+    //[JB]
     private final ConcurrentLinkedQueue<Orange> readyForWork;
     private final ConcurrentLinkedQueue<Orange> processedOranges;
+    //[JB]
     private boolean isWorking;
+    //[JB]
     private final Thread workerThread;
+    //[JB]
     private volatile int orangeCounter;
 
 
     /**
+     * Worker
+     *
+     * //[JB]
      * @param name Name of the Worker (i.e his assignment)
-     * @param to   Oranges ready to be processed
-     * @param from Oranges that have been processed, ready to go out
+     * @param sendingTo   Oranges that have been processed, ready to go out
+     * @param pullingFrom Oranges that are ready to be processed and bottled
      */
-    Worker(String name, ConcurrentLinkedQueue<Orange> to, ConcurrentLinkedQueue<Orange> from) {
-        this.readyForWork = from;
-        this.processedOranges = to;
+    Worker(String name, ConcurrentLinkedQueue<Orange> sendingTo, ConcurrentLinkedQueue<Orange> pullingFrom) {
+        this.readyForWork = pullingFrom;
+        this.processedOranges = sendingTo;
         this.workerThread = new Thread(this, "Worker Name: " + name);
         System.out.println("Worker: " + name + " created.");
         startWorking();
@@ -32,13 +44,20 @@ public class Worker implements Runnable {
     }
 
     /**
+     * stopWorking
      *
+     * //[JB]
      */
     public void stopWorking() {
         isWorking = false;
         clockOut();
     }
 
+    /**
+     * clockOut
+     *
+     * //[JB]
+     */
     public void clockOut() {
         try {
             workerThread.join();
@@ -49,6 +68,7 @@ public class Worker implements Runnable {
 
 
     /**
+     * getOrangeCounter
      * @return The Worker's Orange counter
      */
     public int getOrangeCounter() {
@@ -56,22 +76,24 @@ public class Worker implements Runnable {
     }
 
     /**
+     * run
      *
+     * //[JB]
      */
     @Override
     public void run() {
         while (isWorking) {
             if (readyForWork != null && !readyForWork.isEmpty()) {
-                Orange o = JuiceBottler.getWork(readyForWork);
+                Orange o = Plant.getWork(readyForWork);
                 if (o != null) {
                     o.runProcess();
-                    JuiceBottler.sendWork(o, processedOranges);
+                    Plant.sendWork(o, processedOranges);
                 }
             } else if (readyForWork == null) { // If fetcher
                 Orange o = new Orange();
                 orangeCounter++;
                 o.runProcess();
-                JuiceBottler.sendWork(o, processedOranges);
+                Plant.sendWork(o, processedOranges);
             }
 
             try {
