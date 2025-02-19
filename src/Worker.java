@@ -82,7 +82,7 @@ public class Worker implements Runnable {
      */
     @Override
     public void run() {
-        while (isWorking) {
+        while (isWorking || (readyForWork != null && !readyForWork.isEmpty())) {
             if (readyForWork != null && !readyForWork.isEmpty()) {
                 Orange o = Plant.getWork(readyForWork);
                 if (o != null) {
