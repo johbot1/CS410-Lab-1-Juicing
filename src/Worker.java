@@ -84,16 +84,16 @@ public class Worker implements Runnable {
     public void run() {
         while (isWorking || (readyForWork != null && !readyForWork.isEmpty())) {
             if (readyForWork != null && !readyForWork.isEmpty()) {
-                Orange o = Plant.getWork(readyForWork);
+                Orange o = Plant.getOranges(readyForWork);
                 if (o != null) {
                     o.runProcess();
-                    Plant.sendWork(o, processedOranges);
+                    Plant.sendOranges(o, processedOranges);
                 }
             } else if (readyForWork == null) { // If fetcher
                 Orange o = new Orange();
                 orangeCounter++;
                 o.runProcess();
-                Plant.sendWork(o, processedOranges);
+                Plant.sendOranges(o, processedOranges);
             }
 
             try {

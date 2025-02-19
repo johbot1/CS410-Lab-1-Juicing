@@ -17,7 +17,7 @@ title based on their job, spawning in an  orange, beginning the juicing process.
 ## Data-Parallelization with Plants:
 Each Plant instance manages its own set of queues and workers. 
 By  ensuring each Plant gets its own separate queues, we maintain data-parallelism. 
-The static utility methods (e.g., Plant.sendWork() and Plant.getWork())operate on 
+The static utility methods (e.g., sendOranges() and getOranges())operate on 
 the queues passed into them. They don't store or manage any global states,
 so each Plant's work remains independent of one another.
 

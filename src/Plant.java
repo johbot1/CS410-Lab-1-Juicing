@@ -33,7 +33,7 @@ public class Plant implements Runnable {
     public ConcurrentLinkedQueue<Orange> peelingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> squeezingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> bottlingQueue = new ConcurrentLinkedQueue<Orange>();
-    public ConcurrentLinkedQueue<Orange> processorQueue = new ConcurrentLinkedQueue<Orange>();
+    public ConcurrentLinkedQueue<Orange> processedOranges = new ConcurrentLinkedQueue<Orange>();
     private int orangesProcessed;
     //[JB] Volatile boolean indicating if the plant is working/running
     //Volatile ensures that it is updated and seen across all threads
@@ -172,7 +172,7 @@ public class Plant implements Runnable {
 
         squeezer = new Worker("squeezer", bottlingQueue, squeezingQueue);
 
-        bottler = new Worker("bottler", processorQueue, bottlingQueue);
+        bottler = new Worker("bottler", processedOranges, bottlingQueue);
     }
 
     /**
@@ -191,7 +191,7 @@ public class Plant implements Runnable {
      * @return The current amount of processed oranges
      */
     public int getProcessedOranges() {
-        orangesProcessed = processorQueue.size();
+        orangesProcessed = processedOranges.size();
         return orangesProcessed;
     }
 
@@ -240,26 +240,21 @@ public class Plant implements Runnable {
         System.out.println("Peeling queue: " + peelingQueue.size());
         System.out.println("Squeezing queue: " + squeezingQueue.size());
         System.out.println("Bottling queue: " + bottlingQueue.size());
-        System.out.println("Processor queue: " + processorQueue.size());
 
         // Step 4: Log any remaining oranges
-        if (!processorQueue.isEmpty()) {
-            System.err.println("WARNING: Some oranges were left unprocessed.");
-        }
         if (!peelingQueue.isEmpty()) {
             System.err.println("WARNING: Some oranges were left not peeled.");
         }
 
-        if (!squeezingQueue.isEmpty() ||
-                !bottlingQueue.isEmpty()) {
-            System.err.println("WARNING: Some oranges were left not squoze or bottled.");
+        if (!squeezingQueue.isEmpty()) {
+            System.err.println("WARNING: Some oranges were left not squoze.");
         }
 
         System.out.println("All workers have been stopped.");
     }
 
     /**
-     * getWork
+     * getOranges
      * This function will check the input list first to assess if it's empty or not.
      * If it is not empty, grab an orange, and remove it from the list.
      * If it IS empty, return null.
@@ -267,7 +262,7 @@ public class Plant implements Runnable {
      * @param inputList The list of incoming Orange objects
      * @return
      */
-    public synchronized static Orange getWork(ConcurrentLinkedQueue<Orange> inputList) {
+    public synchronized static Orange getOranges(ConcurrentLinkedQueue<Orange> inputList) {
         if (!inputList.isEmpty()) {
             Orange o = inputList.poll();
             return o;
@@ -277,13 +272,13 @@ public class Plant implements Runnable {
     }
 
     /**
-     * sendWork
+     * sendOranges
      * This function will simply add an orange to the export list.
      *
      * @param orange     Orange object to be added
      * @param exportList
      */
-    public synchronized static void sendWork(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
+    public synchronized static void sendOranges(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
         exportList.add(orange);
     }
 }
