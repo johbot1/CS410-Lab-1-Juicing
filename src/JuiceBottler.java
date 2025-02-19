@@ -3,7 +3,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * //[JB]
  * JuiceBottler
- *
  */
 public class JuiceBottler {
     /**
@@ -16,7 +15,7 @@ public class JuiceBottler {
      * @return
      */
     public synchronized static Orange getWork(ConcurrentLinkedQueue<Orange> inputList) {
-        if (inputList.size() > 0) {
+        if (!inputList.isEmpty()) {
             Orange o = inputList.poll();
             return o;
         } else {
