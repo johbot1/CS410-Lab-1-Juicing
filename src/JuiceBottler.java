@@ -1,62 +1,38 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * //[JB]
+ * JuiceBottler
+ *
+ */
 public class JuiceBottler {
-    private static final int NUM_PLANTS = 2;
-    public static void main(String[] args) {
-        System.out.println("Juice Factory starting up!");
-
-        Plant[] plants = new Plant[NUM_PLANTS];
-        for (int i=0; i <NUM_PLANTS; i ++){
-            plants[i] = new Plant(i + 1);
-            plants[i].startPlant();
+    /**
+     * getWork
+     * This function will check the input list first to assess if it's empty or not.
+     * If it is not empty, grab an orange, and remove it from the list.
+     * If it IS empty, return null.
+     *
+     * @param inputList The list of incoming Orange objects
+     * @return
+     */
+    public synchronized static Orange getWork(ConcurrentLinkedQueue<Orange> inputList) {
+        if (inputList.size() > 0) {
+            Orange o = inputList.poll();
+            return o;
+        } else {
+            return null;
         }
-
-        System.out.println("Plants now running!");
-        delay(Plant.PROCESSING_TIME, "Juice Factory Malfunction");
-
-        System.out.println("Juice Factory: Time to stop the plants.");
-        // Stop the plant, and wait for it to shutdown
-        for (Plant p : plants) {
-            p.stopPlant();
-        }
-        for (Plant p : plants) {
-            p.waitToStop();
-        }
-        System.out.println("Juice Factory: Plants have stopped. Summarizing production.");
-
-        // Summarize the results - Moved summary to JuiceFactory
-        int totalProvided = 0;
-        int totalProcessed = 0;
-        int totalBottles = 0;
-        int totalWasted = 0;
-        for (Plant p : plants) {
-            totalProvided += p.getProvidedOranges();
-            totalProcessed += p.getProcessedOranges();
-            totalBottles += p.getBottles();
-            totalWasted += p.getWaste();
-        }
-        System.out.println("Total provided/processed = " + totalProvided + "/" + totalProcessed);
-        System.out.println("Created " + totalBottles +
-                ", wasted " + totalWasted + " oranges");
-
-        System.out.println("Juice Factory shutting down.");
     }
 
     /**
-     * [JB]
-     * Utility to pause the program giving some tiny degree of randomness - Moved to JuiceFactory
+     * sendWork
+     * This function will simply add an orange to the export list.
      *
-     * @param time
-     * @param errMsg
+     * @param orange     Orange object to be added
+     * @param exportList
      */
-    private static void delay(long time, String errMsg) {
-        long sleepTime = Math.max(1, time);
-        try {
-            Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-            System.err.println(errMsg);
-        }
+    public synchronized static void sendWork(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
+        exportList.add(orange);
     }
 
 

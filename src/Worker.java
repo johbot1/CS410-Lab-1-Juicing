@@ -1,75 +1,85 @@
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-class Worker implements Runnable {
-    private static final Object lock = new Object();
-    private final Plant plant;
-    private final int workerId;
-    private final Queue<Orange> orangeQueue;
+public class Worker implements Runnable {
+    private boolean isWorking;
+    private String workerName;
+
     private Thread workerThread;
+    private volatile int orangeCounter;
 
-    Worker(Plant plant, int workerId) {
-        this.plant = plant;
-        this.workerId = workerId;
-        this.orangeQueue = plant.orangeQueue;
-        this.workerThread = new Thread(this);
-        System.out.println("Worker has been created.");
+
+    private ConcurrentLinkedQueue<Orange> fromList;
+    private ConcurrentLinkedQueue<Orange> toList;
+
+
+    Worker(String name, ConcurrentLinkedQueue<Orange> to, ConcurrentLinkedQueue<Orange> from) {
+        this.fromList = from;
+        this.toList = to;
+        this.workerName = name;
+        this.workerThread = new Thread(this, "Worker Name: " + name);
+        System.out.println("Worker: " + name + " created.");
+        startWorking();
     }
 
+
+    public void startWorking() {
+        isWorking = true;
+//        System.out.println("Worker: " + this.workerName + " is now working!");
+        orangeCounter = 0;
+        workerThread.start();
+
+    }
+
+    public void stopWorking() {
+        isWorking = false;
+        clockOut();
+    }
+
+    public void clockOut() {
+        try {
+            workerThread.join();
+        } catch (InterruptedException e) {
+            System.err.println(workerThread.getName() + " was interrupted.");
+        }
+    }
+
+    public String getWorkerName() {
+        return workerName;
+    }
+
+    public ConcurrentLinkedQueue<Orange> getToList() {
+        return toList;
+    }
+
+    public ConcurrentLinkedQueue<Orange> getFromList() {
+        return fromList;
+    }
+
+    public int getOrangeCounter() {
+        return orangeCounter;
+    }
 
     @Override
     public void run() {
-        System.out.println("Worker 1 on begin work");
-    }
-
-    public synchronized void beginWork(Orange o) {
-        synchronized (lock) {
-            if (!plant.orangeQueue.isEmpty()) {
-//                System.out.println("Able to Grab an orange.");
-                o.runProcess();
-//                System.out.println("Worker 1 on " + plant + " is fetching the orange.");
-                // Fetch
-                while (o.getState() == Orange.State.Fetched)
+        while (isWorking) {
+            if (fromList != null && !fromList.isEmpty()) {
+                Orange o = JuiceBottler.getWork(fromList);
+                if (o != null) {
                     o.runProcess();
-
-//                System.out.println("Fetching complete. Worker 1 is now peeling the orange.");
-                // Peel
-                while (o.getState() == Orange.State.Peeled) {
-                    o.runProcess();  // Move the orange to the next state (Squeezed)
+                    JuiceBottler.sendWork(o, toList);
                 }
-
-//                System.out.println("Peeling completed. Worker 1 is now squeezing the orange.");
-                // Squeeze
-                while (o.getState() == Orange.State.Squeezed) {
-                    o.runProcess();  // Move the orange to the next state (Processed)
-//                    System.out.println("Squeezing complete. Worker 1 is now fetching more oranges.");
-                    plant.orangeQueue.remove();
-                }
-
-                // Notify Worker 2 that Worker 1 is done
-                lock.notify();  // Notify Worker 2 that Worker 1 is done
-            } else {
-                System.out.println("Worker on " + plant + " has ran out of oranges.");
-                workerThread.interrupt();
+            } else if (fromList == null) { // If fetcher
+                Orange o = new Orange();
+                orangeCounter++;
+                o.runProcess();
+                JuiceBottler.sendWork(o, toList);
             }
-        }
-    }
 
-    private void processWithWorker2(Orange o) {
-        synchronized (lock) {
             try {
-                // Wait until Worker 1 finishes its tasks
-                lock.wait();
-                System.out.println("Worker 2 waitin.");
+                Thread.sleep(10); // Prevent CPU overload when waiting for oranges
             } catch (InterruptedException e) {
-                System.err.println("Worker 2 interrupted.");
-            }
-
-            // After Worker 1 finishes, Worker 2 processes the orange
-            System.out.println("Worker 2 on " + plant + " is bottling the orange.");
-            while (o.getState() == Orange.State.Processed) {
-                o.runProcess();  // Move the orange to the final state (Bottled)
+                System.err.println(workerThread.getName() + " interrupted.");
             }
         }
     }
-
 }
