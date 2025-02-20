@@ -3,54 +3,93 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
+ * <h1>Plant</h1>
+ * Central control for the orange juice bottling plant simulation.
+ * <p>
+ * Manages the entire juice production process, from orange intake to bottling, using multithreading
+ * for data and task parallelism.
+ * </p>
+ *
+ * <h2>Parallelism:</h2>
+ * <ul>
+ *     <li><b>Data Parallelism:</b> Multiple {@code Plant} instances process separate orange sets.</li>
+ *     <li><b>Task Parallelism:</b> Within each {@code Plant}, {@link Worker} threads perform parallel processing stages.</li>
+ * </ul>
+ *
+ * <p>
+ * Manages {@link Worker} threads and the flow of {@link Orange} objects between them using concurrent queues.
+ * Sets up the factory environment for parallel orange processing.
+ * </p>
+ *
  * @Author Nate Williams
  * @Author John Botonakis
- * <p>
- * This Plant class represents a factory-esque operation where each instance simulates a plant
- * that processes oranges into bottled juice. The class uses "Runnable" which means that this can
- * be executed on its own thread.
- * <p>
- * Some functions here remain unchanged, with any comments done by me being stated
  */
 public class Plant implements Runnable {
-    //[JB] Put all vars up at the top for easier readability
-    // How long do we want to run the juice processing
+    /**
+     * Processing time for each plant in milliseconds.
+     */
     public static final long PROCESSING_TIME = 5 * 1000;
-    //[JB] The amount of oranges required to produce one bottle
+    /**
+     * Oranges needed per bottle.
+     */
     private final static int ORANGES_PER_BOTTLE = 4;
-    //[JB] The number of plants to be created
+    /**
+     * Number of plant instances.
+     */
     private static final int NUM_PLANTS = 2;
-    //[JB] Magic number for number of workers, one for each job
+    /**
+     * Number of worker threads per plant.
+     */
     private final static int NUM_WORKERS = 5;
-    //[JB] Creates a Thread to be used later
+    /**
+     * Flag to ensure shutdown messages are printed only once.
+     */
+    private static boolean shutdownPrinted = false;
+    /**
+     * Plant's thread.
+     */
     private final Thread thread;
-    //[JB] Creates a storage area for workers
+    /**
+     * Array of worker threads.
+     */
     private final Worker[] workers = new Worker[NUM_WORKERS];
-    //[JB] Creates a storage area for queues
-    private final List<Orange> queues = new ArrayList<Orange>(NUM_WORKERS);
-    //[JB] Tracks the amount of oranges provided/processed by the plant
+    /**
+     * List of queues (not directly used, queues are managed as individual ConcurrentLinkedQueues).
+     */ // Corrected Javadoc
+    private final List<Orange> queues = new ArrayList<Orange>(NUM_WORKERS); // Corrected Javadoc
+    /**
+     * Count of oranges fetched by this plant.
+     */
     public int orangesProvided;
+    /**
+     * Instantiates a Concurrent Linked Queue which is a FIFO node based queue that ""should"" be thread safe
+     */
     public ConcurrentLinkedQueue<Orange> peelingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> squeezingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> bottlingQueue = new ConcurrentLinkedQueue<Orange>();
     public ConcurrentLinkedQueue<Orange> processedOranges = new ConcurrentLinkedQueue<Orange>();
+    /**
+     * Count of oranges fully processed by this plant.
+     */
     private int orangesProcessed;
-    //[JB] Volatile boolean indicating if the plant is working/running
-    //Volatile ensures that it is updated and seen across all threads
+    /**
+     * Volatile boolean indicating if the plant is working/running.
+     * Volatile ensures that it is updated and seen across all threads
+     */
     private volatile boolean timeToWork;
+    /**
+     * Instantiates 5 new workers. Hold onto them until actual worker creation
+     */
     private Worker fetcher;
     private Worker peeler;
     private Worker squeezer;
     private Worker bottler;
-    //[JB] Boolean to ensure that the printout is working only once
-    private static boolean shutdownPrinted = false;
 
 
     /**
-     * Constructor initializes the oranges provided/processed to 0
-     * It also creates a new thread, giving it the run method, and a unique name
-     * //[JB]
-     * @param threadNum a thread number to identify and separate plant objects
+     * Constructs a {@code Plant} instance. Initializes orange counts and creates the plant's thread.
+     *
+     * @param threadNum Plant instance identifier.
      */
     Plant(int threadNum) {
         orangesProvided = 0;
@@ -59,12 +98,10 @@ public class Plant implements Runnable {
     }
 
     /**
-     * Creates an array of plants of "NUM_PLANTS" (2) size and initializes them
-     * After creation, each of the plants starts it's work.
-     * The delay call gives the plants time to work.
-     * Once the work day is done, the plants stop, then join the workers together,
-     * summarizing the day's production.
-     * //[JB]
+     * Creates and starts multiple {@code Plant} instances, lets them process for a set time,
+     * then stops and summarizes the production results.
+     *
+     * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
         // Startup the plants
@@ -97,7 +134,6 @@ public class Plant implements Runnable {
             totalWasted += p.getWaste();
         }
         int actualProvided = totalProvided - totalWasted;  // Adjust for waste
-        System.out.println("My Way");
         System.out.println("Total provided/processed = " + actualProvided + "/" + totalProcessed);
         System.out.println("Created " + totalBottles + ", wasted " + totalWasted + " oranges");
 
@@ -110,10 +146,10 @@ public class Plant implements Runnable {
     }
 
     /**
-     * Delays the plant thread, allowing the workers to work
-     * //[JB]
-     * @param time
-     * @param errMsg
+     * Delays the current thread for a specified time.
+     *
+     * @param time   Delay duration in milliseconds.
+     * @param errMsg Error message to print if interrupted.
      */
     private static void delay(long time, String errMsg) {
         long sleepTime = Math.max(1, time);
@@ -125,8 +161,32 @@ public class Plant implements Runnable {
     }
 
     /**
-     * Sets timeToWork to true, and starts the thread
-     * //[JB]
+     * Retrieves an {@link Orange} from the input queue if available. Thread-safe.
+     *
+     * @param inputList Queue to retrieve from.
+     * @return {@link Orange} if dequeued, {@code null} if queue is empty.
+     */
+    public synchronized static Orange getOranges(ConcurrentLinkedQueue<Orange> inputList) {
+        if (!inputList.isEmpty()) {
+            Orange o = inputList.poll();
+            return o;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Adds an {@link Orange} to the export queue. Thread-safe.
+     *
+     * @param orange     {@link Orange} to send.
+     * @param exportList Queue to add to.
+     */
+    public synchronized static void sendOranges(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
+        exportList.add(orange);
+    }
+
+    /**
+     * Starts the plant's thread, initiating orange processing.
      */
     public void startPlant() {
         timeToWork = true;
@@ -134,8 +194,7 @@ public class Plant implements Runnable {
     }
 
     /**
-     * Sets timeToWork to false, signalling it should stop processing
-     * //[JB]
+     * Signals the plant to stop processing.
      */
     public void stopPlant() {
         timeToWork = false;
@@ -143,7 +202,8 @@ public class Plant implements Runnable {
 
     /**
      * Waits for plant thread to complete by calling join on any other threads
-     * //[JB]
+     *
+     * @throws InterruptedException if plant thread join is interrupted.
      */
     public void waitToStop() {
         try {
@@ -154,10 +214,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * While it is time to work, do nothing as it's a plant and doesn't need to work.
-     * After it's done, begin to slow down production to a halt, eventually stopping altogether.
-     * Finally, print a blank line for better spacing of the production summary
-     * //[JB]
+     * * Plant's main run loop. Creates workers, then waits for {@link #timeToWork} to be set to false,
+     * after which it initiates worker shutdown.
      */
     public void run() {
         System.out.println(Thread.currentThread().getName() + " Processing oranges");
@@ -171,9 +229,8 @@ public class Plant implements Runnable {
     }
 
     /**
-     * createWorkers
-     * Creates each of the workers that will be working in the Factory
-     * //[JB]
+     * Creates and initializes all worker threads for this plant instance.
+     * Workers are created for fetching, peeling, squeezing, and bottling.
      */
     private void createWorkers() {
         String[] workerNames = {"fetcher", "peeler", "squeezer", "bottler"};
@@ -187,9 +244,9 @@ public class Plant implements Runnable {
     }
 
     /**
-     * getProvidedOranges
-     * //[JB]
-     * @return The current amount of fetched oranges
+     * Gets the count of oranges fetched by this plant.
+     *
+     * @return Number of oranges provided.
      */
     public int getProvidedOranges() {
         orangesProvided = fetcher.getOrangeCounter();
@@ -197,9 +254,9 @@ public class Plant implements Runnable {
     }
 
     /**
-     * getProcessedOranges
-     * //[JB]
-     * @return The current amount of processed oranges
+     * Gets the count of oranges fully processed by this plant.
+     *
+     * @return Number of oranges processed.
      */
     public int getProcessedOranges() {
         orangesProcessed = processedOranges.size();
@@ -207,28 +264,26 @@ public class Plant implements Runnable {
     }
 
     /**
-     * getBottles
-     * //[JB]
-     * @return The amount of bottles created by dividing processed oranges by amt of oranges per bottle
+     * Calculates the number of bottles produced.
+     *
+     * @return Number of bottles, based on {@link #ORANGES_PER_BOTTLE}.
      */
     public int getBottles() {
         return orangesProcessed / ORANGES_PER_BOTTLE;
     }
 
     /**
-     * getWaste
-     * //[JB]
-     * @return The amount of waste created
+     * Calculates the number of oranges wasted (remainder and unprocessed).
+     *
+     * @return Number of wasted oranges.
      */
     public int getWaste() {
         return orangesProcessed % ORANGES_PER_BOTTLE + (orangesProvided - orangesProcessed);
     }
 
     /**
-     * quittinTime
-     * This calls the ".join" method on each of the workers,
-     * So long as they are not actively busy, shutting them down.
-     * //[JB]
+     * Initiates worker shutdown sequence. Stops workers, waits briefly, and prints final queue sizes.
+     * Uses a synchronized block to ensure shutdown messages are printed only once across plants.
      */
     private void quittinTime() {
         System.out.println("Signaling workers to stop...");
@@ -251,6 +306,8 @@ public class Plant implements Runnable {
         synchronized (Plant.class) {
             if (!shutdownPrinted) {
                 shutdownPrinted = true;
+                //Mainly for debugging however a great visualization of the queues at the end
+                //Because of this, I choose to keep it in.
                 System.out.println("Final queue sizes before shutdown:");
                 System.out.println("Peeling queue: " + peelingQueue.size());
                 System.out.println("Squeezing queue: " + squeezingQueue.size());
@@ -273,35 +330,6 @@ public class Plant implements Runnable {
                 System.out.println("All workers have been stopped.");
             }
         }
-    }
-
-    /**
-     * getOranges
-     * This function will check the input list first to assess if it's empty or not.
-     * If it is not empty, grab an orange, and remove it from the list.
-     * If it IS empty, return null.
-     *
-     * @param inputList The list of incoming Orange objects
-     * @return
-     */
-    public synchronized static Orange getOranges(ConcurrentLinkedQueue<Orange> inputList) {
-        if (!inputList.isEmpty()) {
-            Orange o = inputList.poll();
-            return o;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * sendOranges
-     * This function will simply add an orange to the sendOranges list.
-     *
-     * @param orange     Orange object to be added
-     * @param exportList
-     */
-    public synchronized static void sendOranges(Orange orange, ConcurrentLinkedQueue<Orange> exportList) {
-        exportList.add(orange);
     }
 }
 
