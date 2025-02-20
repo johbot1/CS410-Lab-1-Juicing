@@ -56,6 +56,9 @@ operations remain safe even when called by multiple threads concurrently.
 
 # Sources:
 - ChatGPT  / GoogleGemini: 
-  - Used for helping me formulate better comments, though most of them way too wordy.
-  Did help me improve my Javadoc game though.
-- 
+  - Used for helping me formulate better comments, though most of them way too wordy. Did help me improve my Javadoc game though
+- I have used others' work as both inspiration and guidance in the process of making my own. They include:
+  - Rakaiah Grende (https://github.com/rgrende/CS-410_JuiceBottlerLab1/tree/main)
+  - Hank Rugg (https://github.com/hankrugg/JuiceBottler)
+  - Dustin Gardner (https://github.com/dustgard/CS-410_JuiceBottler_Lab)
+  - and Aidan Scott (https://github.com/cwdatlas/OrangePlant)
