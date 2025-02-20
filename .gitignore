@@ -7,3 +7,6 @@
 /dataSources/
 /dataSources.local.xml
 /.idea/
+
+# Attempt to exclude the iml file
+CS410-Lab-1-Juicing.iml
