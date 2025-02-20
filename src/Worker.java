@@ -53,6 +53,7 @@ public class Worker implements Runnable {
      * Starts the {@code Worker}'s thread and begins its processing loop.
      */
     public void startWorking() {
+        System.out.println("Starting working...");
         isWorking = true;
         orangeCounter = 0;
         workerThread.start();

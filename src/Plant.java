@@ -286,7 +286,7 @@ public class Plant implements Runnable {
      * Uses a synchronized block to ensure shutdown messages are printed only once across plants.
      */
     private void quittinTime() {
-        System.out.println("Signaling workers to stop...");
+        System.out.println("Blowing the horn! Work is ending...");
 
         // Step 1: Stop workers
         fetcher.stopWorking();
