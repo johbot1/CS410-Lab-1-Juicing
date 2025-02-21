@@ -214,7 +214,7 @@ public class Plant implements Runnable {
     }
 
     /**
-     * * Plant's main run loop. Creates workers, then waits for {@link #timeToWork} to be set to false,
+     * Plant's main run loop. Creates workers, then waits for {@link #timeToWork} to be set to false,
      * after which it initiates worker shutdown.
      */
     public void run() {
