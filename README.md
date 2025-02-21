@@ -25,7 +25,7 @@ to check your installation version: `ant -v` or `ant --version`
 
 # Explanation of the lab
 
-## Overview
+## Technical Overview
 
 The Plant class acts as the central control for this orange juice factory.
 It executes the entire process, from receiving oranges to bottling the juice.
