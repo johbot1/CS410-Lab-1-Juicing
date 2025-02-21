@@ -40,7 +40,7 @@ public class Plant implements Runnable {
     /**
      * Number of worker threads per plant.
      */
-    private final static int NUM_WORKERS = 5;
+    private final static int NUM_WORKERS = 4;
     /**
      * Flag to ensure shutdown messages are printed only once.
      */
@@ -78,7 +78,7 @@ public class Plant implements Runnable {
      */
     private volatile boolean timeToWork;
     /**
-     * Instantiates 5 new workers. Hold onto them until actual worker creation
+     * Instantiates 4 new workers. Hold onto them until actual worker creation
      */
     private Worker fetcher;
     private Worker peeler;
