@@ -2,14 +2,14 @@
  * <h1>Orange</h1>
  * Represents an orange moving through the juice bottling plant.
  * <p>
- *  {@code Orange} objects are the data units processed by {@link Worker} threads under {@link Plant} control.
- *  Tracks the processing state using the {@link State} enum.
+ * {@code Orange} objects are the data units processed by {@link Worker} threads under {@link Plant} control.
+ * Tracks the processing state using the {@link State} enum.
  * </p>
  *
  * <h2>States:</h2>
  * <p>
- *  Transitions through {@link State} enums: {@link State#Fetched}, {@link State#Peeled}, {@link State#Squeezed},
- *  {@link State#Bottled}, {@link State#Processed}. Each state defines processing time.
+ * Transitions through {@link State} enums: {@link State#Fetched}, {@link State#Peeled}, {@link State#Squeezed},
+ * {@link State#Bottled}, {@link State#Processed}. Each state defines processing time.
  * </p>
  *
  * <br> </br>
@@ -22,7 +22,7 @@ public class Orange {
     //Initalizes a state the orange can be in.
     private State state;
 
-     /**
+    /**
      * Constructor. Initializes {@code Orange} in {@link State#Fetched} state and simulates initial work.
      */
     public Orange() {
